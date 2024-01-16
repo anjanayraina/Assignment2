@@ -85,4 +85,40 @@ contract VotingSystemTest is Test {
         assertEq(votingSystem.electionWinner().votesReceived, 2);
         vm.stopPrank();
     }
+
+    function test_VotingNotAllowedAfterElecitonEnd() public {
+        vm.expectRevert(bytes("The voting has ended"));
+        vm.startPrank(address(this));
+        address candidate1 = address(0x456);
+        votingSystem.addCandidate("Candidate1", candidate1);
+        address candidate2 = address(0x789);
+        votingSystem.addCandidate("Candidate2", candidate2);
+        vm.stopPrank();
+        vm.startPrank(address(0));
+        votingSystem.registerVoter("Voter0");
+        votingSystem.vote(0);
+        vm.stopPrank();
+        vm.startPrank(address(5));
+        votingSystem.registerVoter("Voter5");
+        votingSystem.vote(1);
+        vm.stopPrank();
+        address voter = address(0x123);
+        vm.startPrank(voter);
+        votingSystem.registerVoter("Voter1");
+        votingSystem.vote(0);
+        uint256[] memory results = votingSystem.getResults();
+        assertEq(results[0], 2, "Vote count is incorrect");
+        assertEq(results[1], 1, "Vote count is incorrect");
+        assertEq(votingSystem.electionWinner().votesReceived, 2);
+        vm.stopPrank();
+        vm.startPrank(address(this));
+        votingSystem.endVoting();
+        vm.stopPrank();
+        vm.startPrank(address(3));
+        votingSystem.registerVoter("Voter3");
+        votingSystem.vote(0);
+        vm.stopPrank();
+    }
+
+    
 }
