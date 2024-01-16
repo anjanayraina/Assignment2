@@ -26,6 +26,13 @@ contract VotingSystem is Ownable {
         bool hasVoted;
     }
 
+    modifier isVotingOnogoing() {
+        require(!votingEnded, "The voting has ended");
+        _;
+    }
+
+    bool votingEnded;
+
     /**
      * @notice Array of candidates.
      */
@@ -52,6 +59,8 @@ contract VotingSystem is Ownable {
      */
     event CandidateAdded(address indexed candidateAddress);
 
+    constructor(address _owner) Ownable(_owner) {}
+
     function getCandidate(uint256 index) public view returns (Candidate memory) {
         return candidates[index];
     }
@@ -59,11 +68,16 @@ contract VotingSystem is Ownable {
     function getVoter(address voterAddress) public view returns (Voter memory) {
         return voters[voterAddress];
     }
+
+    function endVoting() external onlyOwner {
+        votingEnded = true;
+    }
     /**
      * @notice Function to register a voter. Only the owner can call this function.
+     * @param _name The name of the voter to add.
      */
 
-    function registerVoter(string calldata _name) public {
+    function registerVoter(string calldata _name) public isVotingOnogoing {
         address _voter = msg.sender;
         if (voters[_voter].voterAddress != address(0)) {
             revert VoterAlreadyRegistered(_voter);
@@ -77,7 +91,7 @@ contract VotingSystem is Ownable {
      * @param _name The name of the candidate to add.
      * $param _candidateAddress The address of the candidate
      */
-    function addCandidate(string calldata _name, address _candidateAddress) public onlyOwner {
+    function addCandidate(string calldata _name, address _candidateAddress) public isVotingOnogoing onlyOwner {
         if (_candidateAddress == address(0)) {
             revert ZeroAddressNotAllowed();
         }
@@ -89,7 +103,7 @@ contract VotingSystem is Ownable {
      * @notice Function to cast a vote. Only registered voters can call this function.
      * @param _candidateId The ID of the candidate to vote for.
      */
-    function vote(uint256 _candidateId) public {
+    function vote(uint256 _candidateId) public isVotingOnogoing {
         address voter = msg.sender;
         if (voters[voter].hasVoted) {
             revert AlreadyVoted(voter);
@@ -112,6 +126,10 @@ contract VotingSystem is Ownable {
         }
         return result;
     }
+    /**
+     * @notice Function to get the winner of the election.
+     * @return An array of votes received by each candidate.
+     */
 
     function electionWinner() public view returns (Candidate memory) {
         uint256 highestVotesSoFar;
@@ -125,6 +143,4 @@ contract VotingSystem is Ownable {
         }
         return getCandidate(candidateIndex);
     }
-
-    constructor(address _owner) Ownable(_owner) {}
 }
