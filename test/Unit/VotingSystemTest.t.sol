@@ -17,6 +17,15 @@ contract VotingSystemTest is Test {
    assertEq(votingSystem.getVoter(address(0x123)).name, "Voter1");
    vm.stopPrank();
 }
+function testAddCandidate() public {
+   vm.startPrank(address(this));
+   address candidate = address(0x456);
+   votingSystem.addCandidate("Candidate1", candidate);
+   assertEq(votingSystem.getCandidate(0).candidateAddress ,candidate);
+   assertEq(votingSystem.getCandidate(0).name, "Candidate1");
+   vm.stopPrank();
+}
+
 
 
 }
