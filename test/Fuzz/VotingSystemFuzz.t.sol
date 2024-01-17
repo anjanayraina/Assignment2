@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 import "forge-std/Test.sol";
 import "../.././src/VotingSystem.sol";
 
-contract VotingSystemTest is Test {
+contract VotingSystemFuzzTest is Test {
     VotingSystem public votingSystem;
     address public owner;
 

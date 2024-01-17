@@ -26,6 +26,18 @@ contract VotingSystem is Ownable {
         bool hasVoted;
     }
 
+    /**
+     * @notice Event emitted when a vote is cast.
+     */
+    event VoteCast(address voter, uint256 candidateID);
+
+    /**
+     * @notice Event emitted when the voting ends.
+     */
+    event VotingEnded();
+
+    // ... existing code ...
+
     modifier isVotingOnogoing() {
         require(!votingEnded, "The voting has ended");
         _;
@@ -47,7 +59,6 @@ contract VotingSystem is Ownable {
     error ZeroAddressNotAllowed();
     error AlreadyVoted(address);
     error OutOfBoundsIndex();
-    error VotingReset();
     /**
      * @notice Event emitted when a voter registers.
      */
@@ -71,6 +82,7 @@ contract VotingSystem is Ownable {
 
     function endVoting() external onlyOwner {
         votingEnded = true;
+        emit VotingEnded();
     }
     /**
      * @notice Function to register a voter. Only the owner can call this function.
@@ -101,18 +113,19 @@ contract VotingSystem is Ownable {
 
     /**
      * @notice Function to cast a vote. Only registered voters can call this function.
-     * @param _candidateId The ID of the candidate to vote for.
+     * @param candidateID The ID of the candidate to vote for.
      */
-    function vote(uint256 _candidateId) public isVotingOnogoing {
+    function vote(uint256 candidateID) public isVotingOnogoing {
         address voter = msg.sender;
         if (voters[voter].hasVoted) {
             revert AlreadyVoted(voter);
         }
-        if (_candidateId >= candidates.length) {
+        if (candidateID >= candidates.length) {
             revert OutOfBoundsIndex();
         }
-        candidates[_candidateId].votesReceived += 1;
+        candidates[candidateID].votesReceived += 1;
         voters[voter].hasVoted = true;
+        emit VoteCast(voter, candidateID);
     }
 
     /**
