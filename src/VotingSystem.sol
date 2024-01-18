@@ -36,8 +36,6 @@ contract VotingSystem is Ownable {
      */
     event VotingEnded();
 
-    // ... existing code ...
-
     modifier isVotingOnogoing() {
         require(!votingEnded, "The voting has ended");
         _;
@@ -48,12 +46,11 @@ contract VotingSystem is Ownable {
     /**
      * @notice Array of candidates.
      */
-    Candidate[] public candidates;
+    Candidate[] candidates;
     /**
      * @notice Map of registered voters.
      */
-
-    mapping(address => Voter) public voters;
+    mapping(address => Voter) voters;
 
     error VoterAlreadyRegistered(address);
     error ZeroAddressNotAllowed();
@@ -70,7 +67,13 @@ contract VotingSystem is Ownable {
      */
     event CandidateAdded(address indexed candidateAddress);
 
-    constructor(address _owner) Ownable(_owner) {}
+    constructor(address owner) Ownable(owner) {}
+
+    // Public Functions
+    /**
+     * @notice Event emitted when a candidate is added.
+     * @param index index of the
+     */
 
     function getCandidate(uint256 index) public view returns (Candidate memory) {
         return candidates[index];
@@ -80,65 +83,6 @@ contract VotingSystem is Ownable {
         return voters[voterAddress];
     }
 
-    function endVoting() external onlyOwner {
-        votingEnded = true;
-        emit VotingEnded();
-    }
-    /**
-     * @notice Function to register a voter. Only the owner can call this function.
-     * @param _name The name of the voter to add.
-     */
-
-    function registerVoter(string calldata _name) public isVotingOnogoing {
-        address _voter = msg.sender;
-        if (voters[_voter].voterAddress != address(0)) {
-            revert VoterAlreadyRegistered(_voter);
-        }
-        voters[_voter] = Voter(_name, _voter, false);
-        emit VoterRegistered(_voter);
-    }
-
-    /**
-     * @notice Function to add a candidate. Only the owner can call this function.
-     * @param _name The name of the candidate to add.
-     * $param _candidateAddress The address of the candidate
-     */
-    function addCandidate(string calldata _name, address _candidateAddress) public isVotingOnogoing onlyOwner {
-        if (_candidateAddress == address(0)) {
-            revert ZeroAddressNotAllowed();
-        }
-        candidates.push(Candidate(_name, _candidateAddress, 0));
-        emit CandidateAdded(_candidateAddress);
-    }
-
-    /**
-     * @notice Function to cast a vote. Only registered voters can call this function.
-     * @param candidateID The ID of the candidate to vote for.
-     */
-    function vote(uint256 candidateID) public isVotingOnogoing {
-        address voter = msg.sender;
-        if (voters[voter].hasVoted) {
-            revert AlreadyVoted(voter);
-        }
-        if (candidateID >= candidates.length) {
-            revert OutOfBoundsIndex();
-        }
-        candidates[candidateID].votesReceived += 1;
-        voters[voter].hasVoted = true;
-        emit VoteCast(voter, candidateID);
-    }
-
-    /**
-     * @notice Function to get the results of the voting.
-     * @return An array of votes received by each candidate.
-     */
-    function getResults() public view returns (uint256[] memory) {
-        uint256[] memory result = new uint[](candidates.length);
-        for (uint256 i = 0; i < candidates.length; i++) {
-            result[i] = candidates[i].votesReceived;
-        }
-        return result;
-    }
     /**
      * @notice Function to get the winner of the election.
      * @return An array of votes received by each candidate.
@@ -155,5 +99,66 @@ contract VotingSystem is Ownable {
             }
         }
         return getCandidate(candidateIndex);
+    }
+    // External Functions
+
+    function endVoting() external onlyOwner {
+        votingEnded = true;
+        emit VotingEnded();
+    }
+    /**
+     * @notice Function to register a voter. Only the owner can call this function.
+     * @param name The name of the voter to add.
+     */
+
+    function registerVoter(string calldata name) external isVotingOnogoing {
+        address voter = msg.sender;
+        if (voters[voter].voterAddress != address(0)) {
+            revert VoterAlreadyRegistered(voter);
+        }
+        voters[voter] = Voter(name, voter, false);
+        emit VoterRegistered(voter);
+    }
+
+    /**
+     * @notice Function to add a candidate. Only the owner can call this function.
+     * @param _name The name of the candidate to add.
+     * $param _candidateAddress The address of the candidate
+     */
+    function addCandidate(string calldata _name, address _candidateAddress) external isVotingOnogoing onlyOwner {
+        if (_candidateAddress == address(0)) {
+            revert ZeroAddressNotAllowed();
+        }
+        candidates.push(Candidate(_name, _candidateAddress, 0));
+        emit CandidateAdded(_candidateAddress);
+    }
+
+    /**
+     * @notice Function to cast a vote. Only registered voters can call this function.
+     * @param candidateID The ID of the candidate to vote for.
+     */
+    function vote(uint256 candidateID) external isVotingOnogoing {
+        address voter = msg.sender;
+        if (voters[voter].hasVoted) {
+            revert AlreadyVoted(voter);
+        }
+        if (candidateID >= candidates.length) {
+            revert OutOfBoundsIndex();
+        }
+        candidates[candidateID].votesReceived += 1;
+        voters[voter].hasVoted = true;
+        emit VoteCast(voter, candidateID);
+    }
+
+    /**
+     * @notice Function to get the results of the voting.
+     * @return An array of votes received by each candidate.
+     */
+    function getResults() external view returns (uint256[] memory) {
+        uint256[] memory result = new uint[](candidates.length);
+        for (uint256 i = 0; i < candidates.length; i++) {
+            result[i] = candidates[i].votesReceived;
+        }
+        return result;
     }
 }
