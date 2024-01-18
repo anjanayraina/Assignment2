@@ -41,7 +41,7 @@ contract VotingSystem is Ownable {
         _;
     }
 
-    bool votingEnded;
+    bool public votingEnded;
 
     /**
      * @notice Array of candidates.
@@ -52,9 +52,9 @@ contract VotingSystem is Ownable {
      */
     mapping(address => Voter) voters;
 
-    error VoterAlreadyRegistered(address);
+    error VoterAlreadyRegistered();
     error ZeroAddressNotAllowed();
-    error AlreadyVoted(address);
+    error AlreadyVoted();
     error OutOfBoundsIndex();
     /**
      * @notice Event emitted when a voter registers.
@@ -101,6 +101,9 @@ contract VotingSystem is Ownable {
         return getCandidate(candidateIndex);
     }
     // External Functions
+    /**
+     * @notice Function to end the election.
+     */
 
     function endVoting() external onlyOwner {
         votingEnded = true;
@@ -114,7 +117,7 @@ contract VotingSystem is Ownable {
     function registerVoter(string calldata name) external isVotingOnogoing {
         address voter = msg.sender;
         if (voters[voter].voterAddress != address(0)) {
-            revert VoterAlreadyRegistered(voter);
+            revert VoterAlreadyRegistered();
         }
         voters[voter] = Voter(name, voter, false);
         emit VoterRegistered(voter);
@@ -140,7 +143,7 @@ contract VotingSystem is Ownable {
     function vote(uint256 candidateID) external isVotingOnogoing {
         address voter = msg.sender;
         if (voters[voter].hasVoted) {
-            revert AlreadyVoted(voter);
+            revert AlreadyVoted();
         }
         if (candidateID >= candidates.length) {
             revert OutOfBoundsIndex();

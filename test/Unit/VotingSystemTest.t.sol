@@ -7,12 +7,17 @@ contract VotingSystemTest is Test {
     VotingSystem public votingSystem;
     address public owner;
 
+    error VoterAlreadyRegistered();
+    error OutOfBoundsIndex();
+    error AlreadyVoted();
+    error ZeroAddressNotAllowed();
+
     function setUp() public {
         owner = address(this);
         votingSystem = new VotingSystem(owner);
     }
 
-    function testRegisterVoter() public {
+    function test_RegisterVoter() public {
         vm.startPrank(address(0x123));
         votingSystem.registerVoter("Voter1");
         assertEq(votingSystem.getVoter(address(0x123)).voterAddress, address(0x123));
@@ -20,7 +25,15 @@ contract VotingSystemTest is Test {
         vm.stopPrank();
     }
 
-    function testAddCandidate() public {
+    function test_RegisterVoterAlreadyRegistered() public {
+        vm.startPrank(address(0x123));
+        votingSystem.registerVoter("Voter1");
+        vm.expectRevert(VoterAlreadyRegistered.selector);
+        votingSystem.registerVoter("Voter1");
+        vm.stopPrank();
+    }
+
+    function test_AddCandidate() public {
         vm.startPrank(address(this));
         address candidate = address(0x456);
         votingSystem.addCandidate("Candidate1", candidate);
@@ -29,7 +42,15 @@ contract VotingSystemTest is Test {
         vm.stopPrank();
     }
 
-    function testVote() public {
+    function test_AddCandidateZeroAddress() public {
+        vm.startPrank(address(this));
+        address candidate = address(0x456);
+        vm.expectRevert(ZeroAddressNotAllowed.selector);
+        votingSystem.addCandidate("Candidate1", address(0));
+        vm.stopPrank();
+    }
+
+    function test_Vote() public {
         vm.startPrank(address(this));
         address candidate = address(0x456);
         votingSystem.addCandidate("Candidate1", candidate);
@@ -42,7 +63,35 @@ contract VotingSystemTest is Test {
         vm.stopPrank();
     }
 
-    function testGetResults() public {
+    function test_VoteAlreadyVoted() public {
+        vm.startPrank(address(this));
+        address candidate = address(0x456);
+        votingSystem.addCandidate("Candidate1", candidate);
+        address voter = address(0x123);
+        vm.stopPrank();
+        vm.startPrank(voter);
+        votingSystem.registerVoter("Voter1");
+        votingSystem.vote(0);
+        vm.expectRevert(AlreadyVoted.selector);
+        votingSystem.vote(0);
+
+        vm.stopPrank();
+    }
+
+    function test_VoteOutOfBounds() public {
+        vm.startPrank(address(this));
+        address candidate = address(0x456);
+        votingSystem.addCandidate("Candidate1", candidate);
+        address voter = address(0x123);
+        vm.stopPrank();
+        vm.startPrank(voter);
+        votingSystem.registerVoter("Voter1");
+        vm.expectRevert(OutOfBoundsIndex.selector);
+        votingSystem.vote(10);
+        vm.stopPrank();
+    }
+
+    function test_GetResults() public {
         vm.startPrank(address(this));
         address candidate1 = address(0x456);
         votingSystem.addCandidate("Candidate1", candidate1);
@@ -116,6 +165,36 @@ contract VotingSystemTest is Test {
         vm.startPrank(address(3));
         votingSystem.registerVoter("Voter3");
         votingSystem.vote(0);
+        vm.stopPrank();
+    }
+
+    function test_VotingEnd() public {
+        vm.startPrank(address(this));
+        address candidate1 = address(0x456);
+        votingSystem.addCandidate("Candidate1", candidate1);
+        address candidate2 = address(0x789);
+        votingSystem.addCandidate("Candidate2", candidate2);
+        vm.stopPrank();
+        vm.startPrank(address(0));
+        votingSystem.registerVoter("Voter0");
+        votingSystem.vote(0);
+        vm.stopPrank();
+        vm.startPrank(address(5));
+        votingSystem.registerVoter("Voter5");
+        votingSystem.vote(1);
+        vm.stopPrank();
+        address voter = address(0x123);
+        vm.startPrank(voter);
+        votingSystem.registerVoter("Voter1");
+        votingSystem.vote(0);
+        uint256[] memory results = votingSystem.getResults();
+        assertEq(results[0], 2, "Vote count is incorrect");
+        assertEq(results[1], 1, "Vote count is incorrect");
+        assertEq(votingSystem.electionWinner().votesReceived, 2);
+        vm.stopPrank();
+        vm.startPrank(address(this));
+        votingSystem.endVoting();
+        assertTrue(votingSystem.votingEnded());
         vm.stopPrank();
     }
 }
