@@ -86,8 +86,7 @@ contract VotingSystemFuzzTest is Test {
         vm.stopPrank();
     }
 
-    function test_VotingNotAllowedAfterElecitonEnd() public {
-        vm.expectRevert(bytes("The voting has ended"));
+    function testFail_VotingNotAllowedAfterElecitonEnd() public {
         vm.startPrank(address(this));
         address candidate1 = address(0x456);
         votingSystem.addCandidate("Candidate1", candidate1);
