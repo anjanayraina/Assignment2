@@ -20,12 +20,6 @@ The owner can end the voting process by calling the `endVoting` function. Once t
 ## Results and Winner
 Anyone can query the results of the election by calling the `getResults` function, which returns an array of vote counts for each candidate. The `electionWinner` function can be called to determine the candidate with the highest number of votes.
 
-## Modifiers and Errors
-The contract uses a custom modifier `isVotingOngoing` to restrict certain actions to the period before voting has ended. Custom errors are defined to handle specific conditions such as already registered voters, zero address candidates, voters who have already voted, and out-of-bounds candidate IDs.
-
-## Events
-The contract emits events when voters are registered and candidates are added, providing valuable information for front-end applications to track changes on the blockchain.
-
 # How to run
 1.  **Install Foundry**
 
@@ -44,7 +38,7 @@ foundryup
 2. **Clone This Repo and install dependencies**
 ``` 
 git clone https://github.com/anjanayraina/Assignment2
-cd Assigment1
+cd Assignment2
 forge install
 
 ```
@@ -63,9 +57,6 @@ Several important design choices are evident in the provided decentralized votin
 
 ## Use of Structs
 The contract uses two structs, `Candidate` and `Voter`, to represent the data models for candidates and voters. This encapsulates related data and makes the code more organized and easier to understand.
-
-## Owner Privileges
-The contract inherits from OpenZeppelin's `Ownable` contract, providing a secure way to handle ownership and privileged actions. Only the owner can register voters, add candidates, and end the voting process, centralizing certain control aspects to prevent unauthorized modifications.
 
 ## Voting Integrity
 The contract ensures that each voter can only vote once by tracking the `hasVoted` boolean in the `Voter` struct. This is crucial for maintaining the integrity of the voting process.
@@ -113,14 +104,14 @@ Instead of using generic `require` statements with string messages, the contract
 ## Bounds Checking
 The contract checks that the candidate ID provided in the `vote` function is within the bounds of the candidates array. This prevents out-of-bounds access that could lead to undefined behavior or contract crashes.
 
-## Immutable Voting Record
-Once a vote is cast, it is recorded on the blockchain and cannot be changed. This immutability is inherent to blockchain technology and ensures the permanence and transparency of the voting records.
-
-## Events for Transparency
-The contract emits events for key actions such as voter registration and candidate addition. These events provide a transparent and auditable trail of all significant state changes, which can be monitored by external observers.
-
 ## Visibility of State Variables
 The contract makes state variables like the list of candidates and the mapping of voters public, allowing anyone to inspect the current state of the contract. This transparency helps ensure that the contract's behavior can be verified against its intended functionality.
 
 ## No External Calls
 The contract does not make any external calls to other contracts, which eliminates risks associated with reentrancy attacks and dependencies on external contract behavior.
+
+## Assembly for Null and 0 checks 
+Using assembly for null and zero checks can indeed save gas, as it allows for more direct control over the EVM and can bypass some of the overhead associated with high-level languages like Solidity
+
+## Owner Privileges
+The contract inherits from OpenZeppelin's `Ownable` contract, providing a secure way to handle ownership and privileged actions. Only the owner can register voters, add candidates, and end the voting process, centralizing certain control aspects to prevent unauthorized modifications.
