@@ -71,13 +71,17 @@ contract VotingSystem is Ownable {
 
     // Public Functions
     /**
-     * @notice Event emitted when a candidate is added.
-     * @param index index of the
+     * @notice returns the candidate associated with the index
+     * @param index index of the candidate in the array
      */
 
     function getCandidate(uint256 index) public view returns (Candidate memory) {
         return candidates[index];
     }
+    /**
+     * @notice returns the voter associated with the address
+     * @param voterAddress the address of the voter
+     */
 
     function getVoter(address voterAddress) public view returns (Voter memory) {
         return voters[voterAddress];
@@ -129,8 +133,12 @@ contract VotingSystem is Ownable {
      * $param _candidateAddress The address of the candidate
      */
     function addCandidate(string calldata _name, address _candidateAddress) external isVotingOnogoing onlyOwner {
-        if (_candidateAddress == address(0)) {
-            revert ZeroAddressNotAllowed();
+        bytes4 revertHash = ZeroAddressNotAllowed.selector;
+        assembly {
+            if eq(_candidateAddress, 0) {
+                mstore(0, revertHash)
+                revert(0, 4)
+            }
         }
         candidates.push(Candidate(_name, _candidateAddress, 0));
         emit CandidateAdded(_candidateAddress);
@@ -148,7 +156,9 @@ contract VotingSystem is Ownable {
         if (candidateID >= candidates.length) {
             revert OutOfBoundsIndex();
         }
-        candidates[candidateID].votesReceived += 1;
+        unchecked {
+            candidates[candidateID].votesReceived += 1;
+        }
         voters[voter].hasVoted = true;
         emit VoteCast(voter, candidateID);
     }
@@ -158,9 +168,15 @@ contract VotingSystem is Ownable {
      * @return An array of votes received by each candidate.
      */
     function getResults() external view returns (uint256[] memory) {
-        uint256[] memory result = new uint[](candidates.length);
-        for (uint256 i = 0; i < candidates.length; i++) {
+        uint256 n = candidates.length;
+        uint256[] memory result = new uint[](n);
+        uint256 i;
+
+        for (; i < n;) {
             result[i] = candidates[i].votesReceived;
+            unchecked {
+                ++i;
+            }
         }
         return result;
     }
