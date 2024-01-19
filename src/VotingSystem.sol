@@ -25,10 +25,12 @@ contract VotingSystem is Ownable {
         address voterAddress;
         bool hasVoted;
     }
+
     bool public votingEnded;
     /**
      * @notice Event emitted when a vote is cast.
      */
+
     event VoteCast(address voter, uint256 candidateID);
 
     /**
@@ -40,8 +42,6 @@ contract VotingSystem is Ownable {
         require(!votingEnded, "The voting has ended");
         _;
     }
-
-
 
     /**
      * @notice Array of candidates.

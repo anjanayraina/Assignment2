@@ -44,7 +44,6 @@ contract VotingSystemTest is Test {
 
     function test_AddCandidateZeroAddress() public {
         vm.startPrank(address(this));
-        address candidate = address(0x456);
         vm.expectRevert(ZeroAddressNotAllowed.selector);
         votingSystem.addCandidate("Candidate1", address(0));
         vm.stopPrank();
