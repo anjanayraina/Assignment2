@@ -38,7 +38,7 @@ contract VotingSystem is Ownable {
      */
     event VotingEnded();
 
-    modifier isVotingOnogoing() {
+    modifier ensureVotingIsOngoing() {
         require(!votingEnded, "The voting has ended");
         _;
     }
@@ -95,11 +95,16 @@ contract VotingSystem is Ownable {
     function electionWinner() public view returns (Candidate memory) {
         uint256 highestVotesSoFar;
         uint256 candidateIndex;
-        for (uint256 i = 0; i < candidates.length; i++) {
+        uint256 i;
+        uint256 n = candidates.length;
+        for (; i < n;) {
             uint256 votes = candidates[i].votesReceived;
             if (votes > highestVotesSoFar) {
                 highestVotesSoFar = votes;
                 candidateIndex = i;
+            }
+            unchecked {
+                ++i;
             }
         }
         return getCandidate(candidateIndex);
@@ -118,7 +123,7 @@ contract VotingSystem is Ownable {
      * @param name The name of the voter to add.
      */
 
-    function registerVoter(string calldata name) external isVotingOnogoing {
+    function registerVoter(string calldata name) external ensureVotingIsOngoing {
         address voter = msg.sender;
         if (voters[voter].voterAddress != address(0)) {
             revert VoterAlreadyRegistered();
@@ -132,7 +137,7 @@ contract VotingSystem is Ownable {
      * @param _name The name of the candidate to add.
      * $param _candidateAddress The address of the candidate
      */
-    function addCandidate(string calldata _name, address _candidateAddress) external isVotingOnogoing onlyOwner {
+    function addCandidate(string calldata _name, address _candidateAddress) external ensureVotingIsOngoing onlyOwner {
         bytes4 revertHash = ZeroAddressNotAllowed.selector;
         assembly {
             if eq(_candidateAddress, 0) {
@@ -148,7 +153,7 @@ contract VotingSystem is Ownable {
      * @notice Function to cast a vote. Only registered voters can call this function.
      * @param candidateID The ID of the candidate to vote for.
      */
-    function vote(uint256 candidateID) external isVotingOnogoing {
+    function vote(uint256 candidateID) external ensureVotingIsOngoing {
         address voter = msg.sender;
         if (voters[voter].hasVoted) {
             revert AlreadyVoted();
