@@ -25,7 +25,7 @@ contract VotingSystem is Ownable {
         address voterAddress;
         bool hasVoted;
     }
-
+    bool public votingEnded;
     /**
      * @notice Event emitted when a vote is cast.
      */
@@ -41,7 +41,7 @@ contract VotingSystem is Ownable {
         _;
     }
 
-    bool public votingEnded;
+
 
     /**
      * @notice Array of candidates.
